@@ -1,0 +1,94 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bs-tertiary-bg);
+}
+
+.summary-card,
+.card {
+  border-color: var(--bs-border-color-translucent);
+  box-shadow: 0 0.125rem 0.5rem rgb(0 0 0 / 5%);
+}
+
+.filter-select {
+  width: 11rem;
+}
+
+.container-name {
+  min-width: 10rem;
+}
+
+.container-id,
+.resource-id,
+.ports-list {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.78rem;
+}
+
+.ports-list {
+  white-space: normal;
+}
+
+.actions-group {
+  white-space: nowrap;
+}
+
+.logs-output {
+  min-height: 28rem;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 1rem;
+  color: #d6deeb;
+  background: #111827;
+  font: 0.82rem/1.5 var(--bs-font-monospace);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fixed-table-container {
+  border: 0;
+}
+
+.bootstrap-table .fixed-table-toolbar .search {
+  margin-left: auto;
+}
+
+.nav-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.nav-tabs .nav-link {
+  white-space: nowrap;
+}
+
+.details-output {
+  min-height: 32rem;
+  color: #c9d1d9;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .bootstrap-table .fixed-table-toolbar .search,
+  .bootstrap-table .fixed-table-toolbar .columns {
+    float: none !important;
+    width: 100%;
+  }
+
+  .bootstrap-table .fixed-table-toolbar .search input {
+    width: 100%;
+  }
+}

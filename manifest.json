@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "requires": {
+    "cockpit": "286"
+  },
+  "conditions": [
+    {
+      "path-exists": "/usr/bin/docker"
+    }
+  ],
+  "content-security-policy": "default-src 'self'; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data:; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net",
+  "menu": {
+    "docker": {
+      "label": "Docker",
+      "path": "index.html",
+      "order": 55,
+      "keywords": [
+        {
+          "matches": ["docker", "containers", "imagens", "volumes", "redes", "network", "portas"]
+        }
+      ]
+    }
+  }
+}

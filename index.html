@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Docker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.3/dist/bootstrap-table.min.css" rel="stylesheet">
+    <link href="app.css" rel="stylesheet">
+  </head>
+  <body>
+    <main class="container-fluid px-3 px-lg-4 py-4">
+      <header class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+          <h1 class="h3 mb-1">Docker</h1>
+          <p class="text-body-secondary mb-0">Containers, imagens, volumes e redes</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span id="docker-status" class="badge text-bg-secondary">Verificando...</span>
+          <button id="refresh-button" type="button" class="btn btn-primary">
+            <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Atualizar
+          </button>
+        </div>
+      </header>
+
+      <div id="alert-area" aria-live="polite"></div>
+
+      <nav class="mb-4" aria-label="Recursos do Docker">
+        <ul class="nav nav-tabs" id="resource-tabs" role="tablist">
+          <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#containers-pane" type="button" role="tab"><i class="bi bi-box me-1"></i>Containers <span id="containers-badge" class="badge text-bg-secondary ms-1">0</span></button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#images-pane" type="button" role="tab"><i class="bi bi-layers me-1"></i>Imagens <span id="images-badge" class="badge text-bg-secondary ms-1">0</span></button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#volumes-pane" type="button" role="tab"><i class="bi bi-device-hdd me-1"></i>Volumes <span id="volumes-badge" class="badge text-bg-secondary ms-1">0</span></button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#networks-pane" type="button" role="tab"><i class="bi bi-diagram-3 me-1"></i>Redes <span id="networks-badge" class="badge text-bg-secondary ms-1">0</span></button></li>
+        </ul>
+      </nav>
+
+      <div class="tab-content">
+        <section class="tab-pane fade show active" id="containers-pane" role="tabpanel">
+          <div class="row g-3 mb-4" aria-label="Resumo dos containers">
+            <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Containers</div><div id="total-count" class="fs-3 fw-semibold">—</div></div></div></div>
+            <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Em execução</div><div id="running-count" class="fs-3 fw-semibold text-success">—</div></div></div></div>
+            <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Parados</div><div id="stopped-count" class="fs-3 fw-semibold text-secondary">—</div></div></div></div>
+            <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Docker</div><div id="docker-version" class="fs-6 fw-semibold mt-2 text-truncate">—</div></div></div></div>
+          </div>
+          <div class="card"><div class="card-body">
+            <div id="containers-toolbar"><select id="state-filter" class="form-select form-select-sm filter-select" aria-label="Filtrar por estado"><option value="all">Todos os estados</option><option value="running">Em execução</option><option value="stopped">Parados</option></select></div>
+            <table id="containers-table" data-toolbar="#containers-toolbar" data-search="true" data-search-placeholder="Buscar container" data-pagination="true" data-page-size="10" data-show-columns="true" data-locale="pt-BR" data-unique-id="id">
+              <thead><tr><th data-field="name" data-sortable="true" data-formatter="nameFormatter">Container</th><th data-field="image" data-sortable="true">Imagem</th><th data-field="state" data-sortable="true" data-formatter="stateFormatter">Estado</th><th data-field="status">Status</th><th data-field="ports" data-formatter="portsFormatter">Portas</th><th data-formatter="containerActionsFormatter" data-align="right">Ações</th></tr></thead>
+            </table>
+          </div></div>
+        </section>
+
+        <section class="tab-pane fade" id="images-pane" role="tabpanel">
+          <div class="card"><div class="card-body">
+            <div id="images-toolbar"><button class="btn btn-sm btn-primary" type="button" data-create="image"><i class="bi bi-cloud-download me-1"></i>Baixar imagem</button></div>
+            <table id="images-table" data-toolbar="#images-toolbar" data-search="true" data-search-placeholder="Buscar imagem" data-pagination="true" data-page-size="10" data-show-columns="true" data-locale="pt-BR" data-unique-id="key">
+              <thead><tr><th data-field="repository" data-sortable="true" data-formatter="imageNameFormatter">Repositório</th><th data-field="tag" data-sortable="true">Tag</th><th data-field="created" data-sortable="true">Criada</th><th data-field="size" data-sortable="true">Tamanho</th><th data-formatter="imageActionsFormatter" data-align="right">Ações</th></tr></thead>
+            </table>
+          </div></div>
+        </section>
+
+        <section class="tab-pane fade" id="volumes-pane" role="tabpanel">
+          <div class="card"><div class="card-body">
+            <div id="volumes-toolbar"><button class="btn btn-sm btn-primary" type="button" data-create="volume"><i class="bi bi-plus-lg me-1"></i>Criar volume</button></div>
+            <table id="volumes-table" data-toolbar="#volumes-toolbar" data-search="true" data-search-placeholder="Buscar volume" data-pagination="true" data-page-size="10" data-show-columns="true" data-locale="pt-BR" data-unique-id="name">
+              <thead><tr><th data-field="name" data-sortable="true">Nome</th><th data-field="driver" data-sortable="true">Driver</th><th data-field="scope" data-sortable="true">Escopo</th><th data-field="mountpoint">Ponto de montagem</th><th data-formatter="volumeActionsFormatter" data-align="right">Ações</th></tr></thead>
+            </table>
+          </div></div>
+        </section>
+
+        <section class="tab-pane fade" id="networks-pane" role="tabpanel">
+          <div class="card"><div class="card-body">
+            <div id="networks-toolbar"><button class="btn btn-sm btn-primary" type="button" data-create="network"><i class="bi bi-plus-lg me-1"></i>Criar rede</button></div>
+            <table id="networks-table" data-toolbar="#networks-toolbar" data-search="true" data-search-placeholder="Buscar rede" data-pagination="true" data-page-size="10" data-show-columns="true" data-locale="pt-BR" data-unique-id="id">
+              <thead><tr><th data-field="name" data-sortable="true">Nome</th><th data-field="driver" data-sortable="true">Driver</th><th data-field="scope" data-sortable="true">Escopo</th><th data-field="internal" data-formatter="booleanFormatter">Interna</th><th data-field="ipv6" data-formatter="booleanFormatter">IPv6</th><th data-formatter="networkActionsFormatter" data-align="right">Ações</th></tr></thead>
+            </table>
+          </div></div>
+        </section>
+      </div>
+    </main>
+
+    <div class="modal fade" id="logs-modal" tabindex="-1" aria-labelledby="logs-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><div><h2 class="modal-title fs-5" id="logs-title">Logs</h2><div id="logs-status" class="small text-body-secondary">Conectando...</div></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body p-0"><pre id="logs-output" class="logs-output mb-0" tabindex="0"></pre></div><div class="modal-footer"><button id="clear-logs-button" type="button" class="btn btn-outline-secondary">Limpar</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div></div></div></div>
+
+    <div class="modal fade" id="form-modal" tabindex="-1" aria-labelledby="form-title" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><form id="resource-form"><div class="modal-header"><h2 class="modal-title fs-5" id="form-title">Novo recurso</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body" id="form-fields"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button id="save-resource-button" type="submit" class="btn btn-primary">Salvar</button></div></form></div></div></div>
+
+    <div class="modal fade" id="details-modal" tabindex="-1" aria-labelledby="details-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="details-title">Detalhes</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body p-0"><pre id="details-output" class="logs-output details-output mb-0" tabindex="0"></pre></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div></div></div></div>
+
+    <div class="modal fade" id="confirm-modal" tabindex="-1" aria-labelledby="confirm-title" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="confirm-title">Confirmar ação</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body" id="confirm-message"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button id="confirm-action-button" type="button" class="btn btn-danger">Confirmar</button></div></div></div></div>
+
+    <script src="../base1/cockpit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.3/dist/bootstrap-table.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.3/dist/locale/bootstrap-table-pt-BR.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
