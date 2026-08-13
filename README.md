@@ -1,44 +1,44 @@
 # Cockpit Apps
 
-Extensões simples para o [Cockpit Project](https://cockpit-project.org/).
+Simple extensions for the [Cockpit Project](https://cockpit-project.org/).
 
 ## Docker
 
-O primeiro app oferece uma interface enxuta para consultar e operar containers,
-imagens, volumes e redes Docker sem sair do Cockpit. A interface usa JavaScript
-puro, Bootstrap e Bootstrap Table carregados por CDN.
+The first app provides a streamlined interface for viewing and managing Docker
+containers, images, volumes, and networks without leaving Cockpit. The interface
+uses vanilla JavaScript, Bootstrap, and Bootstrap Table loaded from a CDN.
 
-Recursos disponíveis:
+Available features:
 
-- listar, buscar, iniciar, parar e reiniciar containers;
-- acompanhar logs e inspecionar configurações;
-- baixar, etiquetar, inspecionar e apagar imagens;
-- criar, inspecionar e apagar volumes;
-- criar e inspecionar redes, conectar ou desconectar containers e apagar redes.
+- list, search, start, stop, and restart containers;
+- follow logs and inspect configurations;
+- pull, tag, inspect, and remove images;
+- create, inspect, and remove volumes;
+- create and inspect networks, connect or disconnect containers, and remove networks.
 
-Imagens, volumes e redes possuem propriedades imutáveis no Docker. Por isso, a
-interface não simula alterações que a engine não oferece: imagens são editadas
-com novas tags, redes são editadas pelas conexões, e mudanças estruturais em
-volumes ou redes exigem recriação.
+Images, volumes, and networks have immutable properties in Docker. Therefore,
+the interface does not pretend to support changes that the engine cannot make:
+images are edited by adding tags, networks are edited through their container
+connections, and structural changes to volumes or networks require recreation.
 
-## Requisitos
+## Requirements
 
-- Linux com Cockpit instalado e em execução;
-- Docker Engine e Docker CLI disponíveis no host;
-- usuário autorizado a executar Docker ou a obter acesso administrativo no Cockpit;
-- acesso a `cdn.jsdelivr.net` no navegador, usado pelo Bootstrap e Bootstrap Table.
+- Linux with Cockpit installed and running;
+- Docker Engine and Docker CLI available on the host;
+- a user authorized to run Docker or obtain administrative access through Cockpit;
+- browser access to `cdn.jsdelivr.net`, used by Bootstrap and Bootstrap Table.
 
-Confirme os requisitos antes da instalação:
+Verify the requirements before installation:
 
 ```bash
 cockpit-bridge --version
 docker version
 ```
 
-## Instalação para todos os usuários
+## System-wide installation
 
-O Cockpit procura pacotes de sistema em `/usr/local/share/cockpit`. Clone o
-repositório diretamente nesse diretório:
+Cockpit looks for system packages in `/usr/local/share/cockpit`. Clone the
+repository directly into that directory:
 
 ```bash
 sudo mkdir -p /usr/local/share/cockpit
@@ -46,59 +46,90 @@ sudo git clone https://github.com/fbsis/cockpit-apps.git \
   /usr/local/share/cockpit/cockpit-apps
 ```
 
-Confirme que o manifesto foi encontrado:
+Confirm that Cockpit discovered the manifest:
 
 ```bash
 cockpit-bridge --packages
 ```
 
-Abra o Cockpit, normalmente em `https://SERVIDOR:9090`, entre novamente na
-sessão caso ela já estivesse aberta e selecione **Docker** na seção **Sistema**.
+Open Cockpit, usually at `https://SERVER:9090`. If a session was already open,
+sign in again, then select **Docker** under the **System** section.
 
-O app executa o Docker com a sessão autenticada pelo Cockpit e tenta solicitar
-acesso administrativo quando necessário. Nenhum socket Docker é exposto ao
-navegador.
+The app runs Docker through the session authenticated by Cockpit and attempts to
+request administrative access when required. The Docker socket is never exposed
+to the browser.
 
-## Atualização
+## Updating
 
 ```bash
 sudo git -C /usr/local/share/cockpit/cockpit-apps pull --ff-only
 ```
 
-Depois da atualização, recarregue o Cockpit. Se uma versão antiga continuar
-aberta, encerre a sessão e entre novamente para gerar uma nova sessão do bridge.
+Reload Cockpit after updating. If the previous version remains open, sign out
+and back in to create a new bridge session.
 
-## Remoção
+## Uninstalling
 
-Remova apenas o diretório deste pacote:
+Remove only this package directory:
 
 ```bash
 sudo rm -rf /usr/local/share/cockpit/cockpit-apps
 ```
 
-Essa operação remove somente a interface. Containers, imagens, volumes e redes
-Docker não são alterados.
+This removes only the user interface. Docker containers, images, volumes, and
+networks are not changed.
 
-## Desenvolvimento
+## Development
 
-Crie um link do projeto no diretório de pacotes do Cockpit:
+Create a symbolic link to the project inside Cockpit's user package directory:
 
 ```bash
 mkdir -p ~/.local/share/cockpit
 ln -s "$PWD" ~/.local/share/cockpit/cockpit-apps
 ```
 
-Depois, abra o Cockpit e acesse **Docker** na seção **Sistema**. Pacotes no
-diretório do usuário não usam o cache agressivo aplicado aos pacotes de sistema.
+Open Cockpit and select **Docker** under the **System** section. Packages in the
+user directory are not subject to the aggressive caching used for system packages.
 
-Para verificar se o pacote foi encontrado:
+To verify that Cockpit discovered the package:
 
 ```bash
 cockpit-bridge --packages
 ```
 
-Para desfazer o link de desenvolvimento:
+To remove the development link:
 
 ```bash
 rm ~/.local/share/cockpit/cockpit-apps
 ```
+
+## Project structure
+
+The project is split by responsibility so each Docker resource can evolve
+without turning the entry point into a large, multi-purpose file:
+
+```text
+cockpit-apps/
+├── manifest.json
+├── index.html
+├── app.css
+├── css/
+│   └── docker.css
+└── js/
+    ├── main.js
+    ├── core/
+    │   ├── docker.js
+    │   ├── state.js
+    │   ├── ui.js
+    │   └── validation.js
+    └── docker/
+        ├── containers.js
+        ├── images.js
+        ├── volumes.js
+        └── networks.js
+```
+
+`js/main.js` only coordinates loading and events. Shared Cockpit/Docker access,
+state, validation, and modal behavior live under `js/core`, while each file in
+`js/docker` owns the normalization, table formatting, forms, and actions for one
+Docker resource type.
