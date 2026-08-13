@@ -1,0 +1,27 @@
+.container-id,
+.resource-id,
+.ports-list {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.78rem;
+}
+
+.ports-list {
+  white-space: normal;
+}
+
+.logs-output {
+  min-height: 28rem;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 1rem;
+  color: #d6deeb;
+  background: #111827;
+  font: 0.82rem/1.5 var(--bs-font-monospace);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.details-output {
+  min-height: 32rem;
+  color: #c9d1d9;
+}

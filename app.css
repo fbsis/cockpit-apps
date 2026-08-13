@@ -21,31 +21,8 @@ body {
   min-width: 10rem;
 }
 
-.container-id,
-.resource-id,
-.ports-list {
-  font-family: var(--bs-font-monospace);
-  font-size: 0.78rem;
-}
-
-.ports-list {
-  white-space: normal;
-}
-
 .actions-group {
   white-space: nowrap;
-}
-
-.logs-output {
-  min-height: 28rem;
-  max-height: 70vh;
-  overflow: auto;
-  padding: 1rem;
-  color: #d6deeb;
-  background: #111827;
-  font: 0.82rem/1.5 var(--bs-font-monospace);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
 }
 
 .fixed-table-container {
@@ -64,11 +41,6 @@ body {
 
 .nav-tabs .nav-link {
   white-space: nowrap;
-}
-
-.details-output {
-  min-height: 32rem;
-  color: #c9d1d9;
 }
 
 .spin {
