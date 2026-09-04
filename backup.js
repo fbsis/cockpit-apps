@@ -58,7 +58,12 @@ async function load() {
 
 function openForm(job = {}) {
   document.querySelector("#form-title").textContent = job.id ? "Editar backup" : "Novo backup";
-  for (const [field, fallback] of Object.entries({ id: "", name: "", source: "", destination: "", onCalendar: "*-*-* 02:00:00", snapshotRetention: 14 })) document.querySelector(`#job-${field.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}`).value = job[field] ?? fallback;
+  document.querySelector("#job-id").value = job.id ?? "";
+  document.querySelector("#job-name").value = job.name ?? "";
+  document.querySelector("#job-source").value = job.source ?? "";
+  document.querySelector("#job-destination").value = job.destination ?? "";
+  document.querySelector("#job-schedule").value = job.onCalendar ?? "*-*-* 02:00:00";
+  document.querySelector("#job-retention").value = job.snapshotRetention ?? 14;
   document.querySelector("#job-enabled").checked = job.enabled ?? true;
   document.querySelector("#job-snapshot-source").checked = job.snapshotSource ?? false;
   document.querySelector("#job-snapshot-destination").checked = job.snapshotDestination ?? false;
