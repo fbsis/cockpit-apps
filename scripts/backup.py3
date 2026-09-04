@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 
-SCRIPT_PATH = "/usr/local/share/cockpit/cockpit-apps/apps/backup/scripts/backup.py3"
+SCRIPT_PATH = "/usr/local/share/cockpit/cockpit-apps/scripts/backup.py3"
 CONFIG_PATH = Path("/etc/cockpit-apps/backups.json")
 UNIT_DIRECTORY = Path("/etc/systemd/system")
 PREFIX = "cockpit-apps-backup"

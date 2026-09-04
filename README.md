@@ -6,7 +6,7 @@ Collection of independent extensions for the [Cockpit Project](https://cockpit-p
 
 The package currently provides two applications, each with its own Cockpit menu entry:
 
-- **App de Docker** provides a streamlined interface for viewing and managing Docker
+- **Docker** provides a streamlined interface for viewing and managing Docker
 containers, images, volumes, and networks without leaving Cockpit. The interface
 uses vanilla JavaScript, Bootstrap, and Bootstrap Table loaded from a CDN.
 - **Backup** manages scheduled `rsync` copies, manual runs, logs, status, and optional
@@ -36,7 +36,7 @@ and systemd; ZFS is required only when snapshots are enabled.
 
 The backup helper is derived from the GPL-3.0-or-later Backup module in
 [fbsis/cockpit-navigator](https://github.com/fbsis/cockpit-navigator). See
-`apps/backup/NOTICE.md` for attribution.
+`BACKUP_NOTICE.md` for attribution.
 
 ## Requirements
 
@@ -71,7 +71,7 @@ cockpit-bridge --packages
 ```
 
 Open Cockpit, usually at `https://SERVER:9090`. If a session was already open,
-sign in again, then select **App de Docker** or **Backup** under the **System** section.
+sign in again, then select **Docker** or **Backup** under the **System** section.
 
 The app runs Docker through the session authenticated by Cockpit and attempts to
 request administrative access when required. The Docker socket is never exposed
@@ -106,7 +106,7 @@ mkdir -p ~/.local/share/cockpit
 ln -s "$PWD" ~/.local/share/cockpit/cockpit-apps
 ```
 
-Open Cockpit and select **App de Docker** or **Backup** under the **System** section. Packages in the
+Open Cockpit and select **Docker** or **Backup** under the **System** section. Packages in the
 user directory are not subject to the aggressive caching used for system packages.
 
 To verify that Cockpit discovered the package:
@@ -128,19 +128,17 @@ The project is split into independent Cockpit applications:
 ```text
 cockpit-apps/
 ├── manifest.json
-└── apps/
-    ├── docker/
-    │   ├── index.html
-    │   ├── app.css
-    │   ├── css/docker.css
-    │   └── js/
-    └── backup/
-        ├── index.html
-        ├── main.js
-        ├── backup.css
-        └── scripts/backup.py3
+├── index.html
+├── app.css
+├── css/docker.css
+├── js/
+├── backup.html
+├── backup.js
+├── backup.css
+├── scripts/backup.py3
+└── BACKUP_NOTICE.md
 ```
 
-Each directory under `apps/` is an independent Cockpit application. The Docker
-application keeps shared Cockpit/Docker access, state, validation, and modal behavior
-under `apps/docker/js/core`, while each resource module lives in `apps/docker/js/docker`.
+The Docker application keeps shared Cockpit/Docker access, state, validation, and modal
+behavior under `js/core`, while each resource module lives in `js/docker`. The Backup
+page and its helper are independent from the Docker interface.

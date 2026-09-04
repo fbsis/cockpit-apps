@@ -1,4 +1,4 @@
-const SCRIPT = "/usr/local/share/cockpit/cockpit-apps/apps/backup/scripts/backup.py3";
+const SCRIPT = "/usr/local/share/cockpit/cockpit-apps/scripts/backup.py3";
 const jobsTable = document.querySelector("#jobs-table");
 const jobModal = new bootstrap.Modal("#job-modal");
 const logsModal = new bootstrap.Modal("#logs-modal");

@@ -10,9 +10,9 @@
   ],
   "content-security-policy": "default-src 'self'; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data:; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net",
   "menu": {
-    "docker-app": {
-      "label": "App de Docker",
-      "path": "apps/docker/index.html",
+    "docker": {
+      "label": "Docker",
+      "path": "index.html",
       "order": 55,
       "keywords": [
         {
@@ -22,7 +22,7 @@
     },
     "backup": {
       "label": "Backup",
-      "path": "apps/backup/index.html",
+      "path": "backup.html",
       "order": 56,
       "keywords": [
         {
