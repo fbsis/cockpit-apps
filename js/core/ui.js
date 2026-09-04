@@ -57,6 +57,31 @@ export function confirmAction(title, message, task) {
   modals.confirm.show();
 }
 
+export function confirmActionWithOptions(title, message, options, task) {
+  pendingAction = () => task(options.filter(option => document.querySelector(`#${option.id}`)?.checked).map(option => option.value));
+  document.querySelector("#confirm-title").textContent = title;
+  const content = document.querySelector("#confirm-message");
+  const description = document.createElement("p");
+  description.textContent = message;
+  content.replaceChildren(description);
+  for (const option of options) {
+    const field = document.createElement("div");
+    field.className = "form-check";
+    const input = document.createElement("input");
+    input.id = option.id;
+    input.className = "form-check-input";
+    input.type = "checkbox";
+    input.disabled = option.disabled;
+    const label = document.createElement("label");
+    label.className = "form-check-label";
+    label.htmlFor = option.id;
+    label.textContent = option.label;
+    field.append(input, label);
+    content.appendChild(field);
+  }
+  modals.confirm.show();
+}
+
 async function runConfirmedAction() {
   if (!pendingAction) return;
   const task = pendingAction;

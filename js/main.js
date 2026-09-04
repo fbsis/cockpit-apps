@@ -1,7 +1,7 @@
 import { command, parseJsonLines } from "./core/docker.js";
 import { replaceState, state } from "./core/state.js";
 import { initializeUi, modals, setLoading, showAlert } from "./core/ui.js";
-import { handleContainerAction, normalizeContainer, registerContainerFormatters, renderContainers } from "./docker/containers.js";
+import { handleContainerAction, normalizeContainer, registerContainerFormatters, renderContainers, submitContainerPortForm } from "./docker/containers.js";
 import { handleImageAction, normalizeImage, openImageForm, registerImageFormatters, renderImages, submitImageForm } from "./docker/images.js";
 import { handleVolumeAction, normalizeVolume, openVolumeForm, registerVolumeFormatters, renderVolumes, submitVolumeForm } from "./docker/volumes.js";
 import { handleNetworkAction, normalizeNetwork, openNetworkForm, registerNetworkFormatters, renderNetworks, submitNetworkForm } from "./docker/networks.js";
@@ -66,6 +66,7 @@ async function handleForm(event) {
   button.disabled = true;
   try {
     if (handler === "image") await submitImageForm(data, mode, key);
+    else if (handler === "container-port") await submitContainerPortForm(data);
     else if (handler === "volume") await submitVolumeForm(data);
     else if (handler === "network") await submitNetworkForm(data, mode, id);
     else throw new Error("Unknown form.");
