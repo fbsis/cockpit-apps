@@ -19,6 +19,16 @@
           "matches": ["docker", "containers", "imagens", "volumes", "redes", "network", "portas"]
         }
       ]
+    },
+    "backup": {
+      "label": "Backup",
+      "path": "apps/backup/index.html",
+      "order": 56,
+      "keywords": [
+        {
+          "matches": ["backup", "copia", "rsync", "snapshot", "zfs"]
+        }
+      ]
     }
   }
 }

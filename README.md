@@ -1,12 +1,18 @@
 # Cockpit Apps
 
-Simple extensions for the [Cockpit Project](https://cockpit-project.org/).
+Collection of independent extensions for the [Cockpit Project](https://cockpit-project.org/).
 
-## Docker
+## Apps
 
-The first app provides a streamlined interface for viewing and managing Docker
+The package currently provides two applications, each with its own Cockpit menu entry:
+
+- **App de Docker** provides a streamlined interface for viewing and managing Docker
 containers, images, volumes, and networks without leaving Cockpit. The interface
 uses vanilla JavaScript, Bootstrap, and Bootstrap Table loaded from a CDN.
+- **Backup** manages scheduled `rsync` copies, manual runs, logs, status, and optional
+  ZFS snapshots with retention through systemd timers.
+
+### App de Docker
 
 Available features:
 
@@ -21,12 +27,24 @@ the interface does not pretend to support changes that the engine cannot make:
 images are edited by adding tags, networks are edited through their container
 connections, and structural changes to volumes or networks require recreation.
 
+### Backup
+
+Backup jobs run as system services. Their configuration is saved at
+`/etc/cockpit-apps/backups.json`, logs at `/var/cache/cockpit-apps/backups`, and
+systemd units use the `cockpit-apps-backup@` prefix. The module requires `rsync`
+and systemd; ZFS is required only when snapshots are enabled.
+
+The backup helper is derived from the GPL-3.0-or-later Backup module in
+[fbsis/cockpit-navigator](https://github.com/fbsis/cockpit-navigator). See
+`apps/backup/NOTICE.md` for attribution.
+
 ## Requirements
 
 - Linux with Cockpit installed and running;
 - Docker Engine and Docker CLI available on the host;
 - a user authorized to run Docker or obtain administrative access through Cockpit;
 - browser access to `cdn.jsdelivr.net`, used by Bootstrap and Bootstrap Table.
+- `rsync` and systemd to use the Backup app; ZFS tools are optional.
 
 Verify the requirements before installation:
 
@@ -53,7 +71,7 @@ cockpit-bridge --packages
 ```
 
 Open Cockpit, usually at `https://SERVER:9090`. If a session was already open,
-sign in again, then select **Docker** under the **System** section.
+sign in again, then select **App de Docker** or **Backup** under the **System** section.
 
 The app runs Docker through the session authenticated by Cockpit and attempts to
 request administrative access when required. The Docker socket is never exposed
@@ -88,7 +106,7 @@ mkdir -p ~/.local/share/cockpit
 ln -s "$PWD" ~/.local/share/cockpit/cockpit-apps
 ```
 
-Open Cockpit and select **Docker** under the **System** section. Packages in the
+Open Cockpit and select **App de Docker** or **Backup** under the **System** section. Packages in the
 user directory are not subject to the aggressive caching used for system packages.
 
 To verify that Cockpit discovered the package:
@@ -105,31 +123,24 @@ rm ~/.local/share/cockpit/cockpit-apps
 
 ## Project structure
 
-The project is split by responsibility so each Docker resource can evolve
-without turning the entry point into a large, multi-purpose file:
+The project is split into independent Cockpit applications:
 
 ```text
 cockpit-apps/
 ├── manifest.json
-├── index.html
-├── app.css
-├── css/
-│   └── docker.css
-└── js/
-    ├── main.js
-    ├── core/
-    │   ├── docker.js
-    │   ├── state.js
-    │   ├── ui.js
-    │   └── validation.js
-    └── docker/
-        ├── containers.js
-        ├── images.js
-        ├── volumes.js
-        └── networks.js
+└── apps/
+    ├── docker/
+    │   ├── index.html
+    │   ├── app.css
+    │   ├── css/docker.css
+    │   └── js/
+    └── backup/
+        ├── index.html
+        ├── main.js
+        ├── backup.css
+        └── scripts/backup.py3
 ```
 
-`js/main.js` only coordinates loading and events. Shared Cockpit/Docker access,
-state, validation, and modal behavior live under `js/core`, while each file in
-`js/docker` owns the normalization, table formatting, forms, and actions for one
-Docker resource type.
+Each directory under `apps/` is an independent Cockpit application. The Docker
+application keeps shared Cockpit/Docker access, state, validation, and modal behavior
+under `apps/docker/js/core`, while each resource module lives in `apps/docker/js/docker`.

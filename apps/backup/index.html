@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="backup.css" rel="stylesheet">
+  </head>
+  <body>
+    <main class="container-lg py-4">
+      <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div><h1 class="h3 mb-1">Backup</h1><p class="text-body-secondary mb-0">Cópias agendadas com rsync e snapshots ZFS opcionais</p></div>
+        <div class="d-flex gap-2"><button id="refresh-button" type="button" class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>Atualizar</button><button id="new-button" type="button" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Novo backup</button></div>
+      </header>
+      <div id="alert-area" aria-live="polite"></div>
+      <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Nome</th><th>Origem</th><th>Destino</th><th>Agendamento</th><th>Status</th><th>Última execução</th><th class="text-end">Ações</th></tr></thead><tbody id="jobs-table"></tbody></table></div></div>
+      <p id="empty-state" class="text-center text-body-secondary py-5 mb-0">Nenhum backup agendado.</p>
+    </main>
+
+    <div class="modal fade" id="job-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><form id="job-form"><div class="modal-header"><h2 id="form-title" class="modal-title fs-5">Novo backup</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><input id="job-id" name="id" type="hidden"><div class="row g-3"><div class="col-md-6"><label class="form-label" for="job-name">Nome</label><input id="job-name" name="name" class="form-control" required></div><div class="col-md-6"><label class="form-label" for="job-schedule">Agendamento systemd</label><input id="job-schedule" name="onCalendar" class="form-control" value="*-*-* 02:00:00" required><div class="form-text">Exemplo: `*-*-* 02:00:00` ou `Mon..Fri 22:00`.</div></div><div class="col-12"><label class="form-label" for="job-source">Diretório de origem</label><input id="job-source" name="source" class="form-control" placeholder="/dados" required></div><div class="col-12"><label class="form-label" for="job-destination">Diretório de destino</label><input id="job-destination" name="destination" class="form-control" placeholder="/backup" required><div class="form-text">O destino não pode estar dentro da origem.</div></div><div class="col-md-6"><div class="form-check mt-2"><input id="job-enabled" name="enabled" class="form-check-input" type="checkbox" checked><label class="form-check-label" for="job-enabled">Executar automaticamente</label></div></div><div class="col-md-6"><div class="form-check mt-2"><input id="job-snapshot-source" name="snapshotSource" class="form-check-input" type="checkbox"><label class="form-check-label" for="job-snapshot-source">Snapshot ZFS na origem</label></div></div><div class="col-md-6"><div class="form-check"><input id="job-snapshot-destination" name="snapshotDestination" class="form-check-input" type="checkbox"><label class="form-check-label" for="job-snapshot-destination">Snapshot ZFS no destino</label></div></div><div class="col-md-6"><label class="form-label" for="job-retention">Snapshots mantidos</label><input id="job-retention" name="snapshotRetention" type="number" min="0" value="14" class="form-control"><div class="form-text">0 mantém todos.</div></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button id="save-button" type="submit" class="btn btn-primary">Salvar</button></div></form></div></div></div>
+
+    <div class="modal fade" id="logs-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h2 id="logs-title" class="modal-title fs-5">Logs</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><h3 class="h6">Backup</h3><pre id="backup-log" class="log-output"></pre><h3 class="h6 mt-3">Serviço systemd</h3><pre id="journal-log" class="log-output"></pre></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div></div></div></div>
+
+    <script src="../../base1/cockpit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
