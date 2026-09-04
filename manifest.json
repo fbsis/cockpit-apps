@@ -10,9 +10,9 @@
   ],
   "content-security-policy": "default-src 'self'; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data:; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net",
   "menu": {
-    "docker": {
-      "label": "Docker",
-      "path": "index.html",
+    "docker-app": {
+      "label": "App de Docker",
+      "path": "apps/docker/index.html",
       "order": 55,
       "keywords": [
         {
