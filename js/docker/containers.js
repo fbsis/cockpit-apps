@@ -1,6 +1,6 @@
 import { command } from "../core/docker.js";
 import { state } from "../core/state.js";
-import { actionButton, confirmAction, confirmActionWithOptions, escapeHtml, field, modals, openLogs, showAlert, showDetails } from "../core/ui.js";
+import { actionButton, confirmAction, confirmActionWithOptions, escapeHtml, modals, openLogs, showAlert, showDetails } from "../core/ui.js";
 import { validArgument } from "../core/validation.js";
 
 const ACTIONS = new Set(["start", "stop", "restart"]);
@@ -77,13 +77,13 @@ async function openRemoveContainer(container) {
 export async function openPortForm(container) {
   try {
     const [details] = JSON.parse(await command(["docker", "container", "inspect", container.id]));
-    const bindings = Object.keys(details.HostConfig.PortBindings || {});
+    const bindings = Object.entries(details.HostConfig.PortBindings || {}).flatMap(([containerPort, items]) => (items || []).map(item => ({ containerPort, hostIp: item.HostIp || "", hostPort: item.HostPort || "" })));
     if (!bindings.length) throw new Error("This container has no published ports to change.");
     portChange = { container, details };
+    portChange.bindings = bindings;
     document.querySelector("#form-title").textContent = `Alterar portas — ${container.name}`;
-    const choices = bindings.map(port => `<option value="${escapeHtml(port)}">${escapeHtml(port)}</option>`).join("");
-    const first = details.HostConfig.PortBindings[bindings[0]][0]?.HostPort || "";
-    document.querySelector("#form-fields").innerHTML = `<div class="alert alert-warning">O Docker recriará o container para alterar a porta. O container antigo só será removido depois que o novo iniciar com sucesso.</div><div class="mb-3"><label class="form-label" for="field-container-port">Porta do container</label><select class="form-select" id="field-container-port" name="containerPort">${choices}</select></div>${field("hostPort", "Nova porta no host", first, "De 1 a 65535.")}`;
+    const inputs = bindings.map((binding, index) => `<div class="row g-2 align-items-end mb-3"><div class="col-md-5"><label class="form-label">Porta do container</label><input class="form-control" value="${escapeHtml(binding.containerPort)}" readonly></div><div class="col-md-3"><label class="form-label">IP do host</label><input class="form-control" value="${escapeHtml(binding.hostIp || "Todas as interfaces")}" readonly></div><div class="col-md-4"><label class="form-label" for="field-host-port-${index}">Porta no host</label><input class="form-control" id="field-host-port-${index}" name="hostPort-${index}" value="${escapeHtml(binding.hostPort)}" required></div></div>`).join("");
+    document.querySelector("#form-fields").innerHTML = `<div class="alert alert-warning">O Docker recriará o container uma vez, aplicando todas as portas abaixo. O container antigo só será removido depois que o novo iniciar com sucesso.</div>${inputs}`;
     document.querySelector("#resource-form").dataset.handler = "container-port";
     modals.form.show();
   } catch (error) {
@@ -99,9 +99,8 @@ function addPortBinding(args, containerPort, binding) {
 
 export async function submitContainerPortForm(data) {
   if (!portChange) throw new Error("Container configuration was not loaded.");
-  const containerPort = data.get("containerPort");
-  const hostPort = data.get("hostPort").trim();
-  if (!portChange.details.HostConfig.PortBindings[containerPort] || !/^\d{1,5}$/.test(hostPort) || Number(hostPort) > 65535 || !validArgument(hostPort)) throw new Error("Enter a valid host port.");
+  const bindings = portChange.bindings.map((binding, index) => ({ ...binding, hostPort: data.get(`hostPort-${index}`).trim() }));
+  if (bindings.some(binding => !/^\d{1,5}$/.test(binding.hostPort) || Number(binding.hostPort) > 65535 || !validArgument(binding.hostPort))) throw new Error("Enter valid host ports.");
   const { container, details } = portChange;
   const temporaryName = `${container.name}-replacement-${Date.now()}`.replace(/[^a-zA-Z0-9_.-]/g, "-");
   const config = details.Config;
@@ -117,10 +116,7 @@ export async function submitContainerPortForm(data) {
     const source = mount.Type === "volume" ? mount.Name : mount.Source;
     args.push("--volume", `${source}:${mount.Destination}${mount.RW ? "" : ":ro"}`);
   }
-  for (const [port, bindings] of Object.entries(hostConfig.PortBindings || {})) {
-    if (port === containerPort) addPortBinding(args, port, { HostPort: hostPort, HostIp: bindings[0]?.HostIp || "" });
-    else for (const binding of bindings || []) addPortBinding(args, port, binding);
-  }
+  for (const binding of bindings) addPortBinding(args, binding.containerPort, { HostPort: binding.hostPort, HostIp: binding.hostIp });
   if (config.Entrypoint?.length) args.push("--entrypoint", config.Entrypoint.join(" "));
   const networks = Object.keys(details.NetworkSettings.Networks || {});
   if (networks.length) args.push("--network", networks[0]);
