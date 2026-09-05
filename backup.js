@@ -71,8 +71,7 @@ async function openWizard(job = null, initialStep = 0) {
     if (step === 3) await renderReview(body, draft);
     const cancel = document.createElement("button"); cancel.type = "button"; cancel.className = "btn btn-secondary"; cancel.textContent = "Cancelar"; cancel.onclick = () => jobModal.hide(); footer.append(cancel);
     if (step) { const back = document.createElement("button"); back.type = "button"; back.className = "btn btn-outline-secondary"; back.textContent = "Voltar"; back.onclick = async () => { if (readStep(body, draft, step)) { step--; await render(); } }; footer.append(back); }
-    const next = document.createElement("button"); next.type = "button"; next.className = "btn btn-primary"; next.textContent = step === 3 ? "Salvar agendamento" : "Avançar";
-    next.addEventListener("click", async () => {
+    const advance = async next => {
       if (!readStep(body, draft, step)) return;
       if (step < 3) { step++; await render(); return; }
       next.disabled = true;
@@ -88,10 +87,12 @@ async function openWizard(job = null, initialStep = 0) {
         next.disabled = false;
         next.textContent = "Salvar agendamento";
       }
-    });
+    };
+    const next = document.createElement("button"); next.type = step === 3 ? "submit" : "button"; next.className = "btn btn-primary"; next.textContent = step === 3 ? "Salvar agendamento" : "Avançar";
+    if (step === 3) form.onsubmit = event => { event.preventDefault(); void advance(next); };
+    else next.addEventListener("click", () => { void advance(next); });
     footer.append(next);
   }
-  form.onsubmit = event => { event.preventDefault(); };
   await render(); jobModal.show();
 }
 function renderPaths(body, draft) {
@@ -120,7 +121,7 @@ async function renderSnapshots(body, draft) {
 async function renderReview(body, draft) {
   body.insertAdjacentHTML("beforeend", `<dl><dt>Tipo</dt><dd>${draft.mode === "snapshot" ? "Snapshot ZFS" : "Cópia rsync"}</dd><dt>Origem</dt><dd>${escapeHtml(draft.source)}</dd>${draft.mode === "rsync" ? `<dt>Destino</dt><dd>${escapeHtml(draft.destination)}</dd>` : ""}<dt>Agenda</dt><dd>${draft.enabled ? escapeHtml(draft.onCalendar) : "Pausado"}</dd><dt>Retenção</dt><dd>${draft.snapshotRetention || "Ilimitada"}</dd></dl>`);
   if (draft.lastRun) body.insertAdjacentHTML("beforeend", `<h3 class="h6">Última execução</h3><p>${escapeHtml(lastRun(draft))} · ${escapeHtml(draft.lastRun.metrics?.files || "—")} arquivos · ${escapeHtml(draft.lastRun.metrics?.transferred || "—")}</p>`);
-  if (draft.id) { const logs = document.createElement("pre"); logs.className = "log-output"; body.append(logs); const update = async () => { const [result, current] = await Promise.all([run("logs", [draft.id]).catch(() => ({ lines: [] })), run("list").then(({ jobs }) => jobs.find(job => job.id === draft.id)?.status).catch(() => null)]); logs.textContent = `${current?.running ? "Executando" : current?.result || "Parado"}\n\n${result.lines.join("\n") || "Sem logs."}`; }; await update(); detailTimer = setInterval(update, 3000); }
+  if (draft.lastRun) { const logs = document.createElement("pre"); logs.className = "log-output"; body.append(logs); const update = async () => { const [result, current] = await Promise.all([run("logs", [draft.id]).catch(() => ({ lines: [] })), run("list").then(({ jobs }) => jobs.find(job => job.id === draft.id)?.status).catch(() => null)]); logs.textContent = `${current?.running ? "Executando" : current?.result || "Parado"}\n\n${result.lines.join("\n") || "Sem logs."}`; }; await update(); detailTimer = setInterval(update, 3000); }
 }
 function readStep(body, draft, step) {
   const get = name => body.querySelector(`[name="${name}"]`);
