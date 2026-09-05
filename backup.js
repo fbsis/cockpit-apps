@@ -9,11 +9,14 @@ let selectedDirectoryInput;
 let currentDirectory;
 
 function run(action, args = [], input) {
-  return cockpit.spawn([SCRIPT, action, ...args], { err: "message", input }).then(output => {
+  const process = cockpit.spawn([SCRIPT, action, ...args], { err: "message", input });
+  let timeoutId;
+  const timeout = new Promise((_, reject) => { timeoutId = setTimeout(() => { process.close("timeout"); reject(new Error("A operação excedeu 30 segundos. Verifique o systemd do root.")); }, 30000); });
+  return Promise.race([process, timeout]).then(output => {
     const result = JSON.parse(output);
     if (!result.ok) throw new Error(result.error || "A operação de backup falhou.");
     return result;
-  });
+  }).finally(() => clearTimeout(timeoutId));
 }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
 function alert(message, type = "danger") {
