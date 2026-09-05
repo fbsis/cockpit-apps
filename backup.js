@@ -2,8 +2,11 @@ const SCRIPT = "/usr/local/share/cockpit/cockpit-apps/scripts/backup.py3";
 const jobsTable = document.querySelector("#jobs-table");
 const jobModal = new bootstrap.Modal("#job-modal");
 const logsModal = new bootstrap.Modal("#logs-modal");
+const directoryModal = new bootstrap.Modal("#directory-modal");
 let refreshTimer;
 let detailTimer;
+let selectedDirectoryInput;
+let currentDirectory;
 
 function run(action, args = [], input) {
   return cockpit.spawn([SCRIPT, action, ...args], { err: "message", input }).then(output => {
@@ -73,6 +76,16 @@ async function openWizard(job = null, initialStep = 0) {
 function renderPaths(body, draft) {
   body.insertAdjacentHTML("beforeend", field("name", "Nome", draft.name) + `<div class="mb-3"><label class="form-label" for="field-mode">Tipo</label><select id="field-mode" name="mode" class="form-select"><option value="rsync">Cópia rsync</option><option value="snapshot">Somente snapshot ZFS</option></select></div>` + field("source", "Diretório de origem", draft.source) + (draft.mode === "rsync" ? field("destination", "Diretório de destino", draft.destination) : ""));
   body.querySelector("#field-mode").value = draft.mode;
+  for (const name of ["source", "destination"]) {
+    const input = body.querySelector(`#field-${name}`);
+    if (!input) continue;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn-outline-secondary mt-2";
+    button.textContent = "Escolher pasta";
+    button.onclick = () => openDirectoryPicker(input);
+    input.parentElement.appendChild(button);
+  }
 }
 function renderSchedule(body, draft) {
   body.insertAdjacentHTML("beforeend", `<div class="mb-3"><label class="form-label" for="field-schedule-kind">Frequência</label><select id="field-schedule-kind" name="scheduleKind" class="form-select"><option value="every-2">A cada 2 horas</option><option value="every-6">A cada 6 horas</option><option value="daily">Diariamente às 02:00</option><option value="custom">Calendário systemd personalizado</option></select></div>` + field("onCalendar", "Systemd OnCalendar", draft.onCalendar, "text", false) + `<div class="form-check"><input id="field-enabled" name="enabled" class="form-check-input" type="checkbox" ${draft.enabled ? "checked" : ""}><label class="form-check-label" for="field-enabled">Executar automaticamente</label></div>`);
@@ -100,6 +113,39 @@ async function showLogs(id) {
   const update = async () => { try { const logs = await run("logs", [id]); document.querySelector("#backup-log").textContent = logs.lines.join("\n") || "Sem registros."; document.querySelector("#journal-log").textContent = logs.journal.join("\n") || "Sem registros."; } catch (error) { document.querySelector("#backup-log").textContent = error.message; } };
   await update(); detailTimer = setInterval(update, 3000);
 }
+async function browseDirectories(path) {
+  const list = document.querySelector("#directory-list");
+  list.replaceChildren();
+  document.querySelector("#directory-path").textContent = "Carregando...";
+  try {
+    const result = await run("directories", [path]);
+    currentDirectory = result.path;
+    document.querySelector("#directory-path").textContent = result.path;
+    document.querySelector("#directory-up-button").disabled = result.path === "/";
+    document.querySelector("#directory-up-button").onclick = () => browseDirectories(result.parent);
+    for (const name of result.directories) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "list-group-item list-group-item-action directory-item";
+      button.textContent = name;
+      button.onclick = () => browseDirectories(`${result.path === "/" ? "" : result.path}/${name}`);
+      list.appendChild(button);
+    }
+    if (!result.directories.length) list.textContent = "Nenhuma subpasta disponível.";
+  } catch (error) {
+    document.querySelector("#directory-path").textContent = error.message;
+    list.replaceChildren();
+  }
+}
+async function openDirectoryPicker(input) {
+  selectedDirectoryInput = input;
+  directoryModal.show();
+  await browseDirectories(input.value.startsWith("/") ? input.value : "/");
+}
+document.querySelector("#directory-select-button").addEventListener("click", () => {
+  if (selectedDirectoryInput && currentDirectory) selectedDirectoryInput.value = currentDirectory;
+  directoryModal.hide();
+});
 document.querySelector("#new-button").addEventListener("click", () => openWizard());
 document.querySelector("#refresh-button").addEventListener("click", load);
 document.querySelector("#import-navigator-button").addEventListener("click", async () => { if (!confirm("Importar os agendamentos do Cockpit Navigator do root?")) return; try { const result = await run("import-navigator"); alert(result.imported ? `${result.imported} agendamento(s) importado(s).` : "Nenhum agendamento novo foi encontrado.", "success"); await load(); } catch (error) { alert(error.message); } });

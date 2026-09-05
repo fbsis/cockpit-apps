@@ -1,3 +1,4 @@
 .log-output { background: var(--bs-tertiary-bg); border-radius: .375rem; max-height: 22rem; padding: 1rem; white-space: pre-wrap; }
 .job-actions { white-space: nowrap; }
 .summary-card { border-color: var(--bs-border-color); }
+.directory-item { text-align: left; }

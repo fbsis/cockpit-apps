@@ -97,6 +97,11 @@ def detect_zfs(path):
     if not os.path.isabs(path): raise ValueError("Path must be absolute.")
     dataset = zfs_dataset(path)
     return {"supported": bool(dataset), "dataset": dataset}
+def list_directories(path):
+    target = Path(path).resolve()
+    if not target.is_dir(): raise ValueError("Directory does not exist.")
+    directories = sorted(entry.name for entry in target.iterdir() if entry.is_dir() and not entry.name.startswith("."))[:500]
+    return {"path": str(target), "parent": str(target.parent), "directories": directories}
 def snapshot_metrics(dataset, job_id, retention):
     prefixes = (f"{dataset}@{PREFIX}-{job_id}-", f"{dataset}@navigator-{job_id}-")
     result = subprocess.run(["zfs", "list", "-H", "-t", "snapshot", "-o", "name", "-s", "creation", "-r", dataset], check=True, text=True, capture_output=True)
@@ -179,6 +184,7 @@ def main():
             job_id = sys.argv[2]; validate_id(job_id); lines = log_path(job_id).read_text(encoding="utf-8").splitlines()[-50:] if log_path(job_id).exists() else []
             journal = subprocess.run(["journalctl", "--user", "--no-pager", "--output=short-iso", "--lines=50", "--unit", unit_name(job_id, "service")], text=True, capture_output=True).stdout.splitlines()[-50:]; respond({"lines": lines, "journal": journal})
         elif action == "detect-zfs": respond(detect_zfs(sys.argv[2]))
+        elif action == "directories": respond(list_directories(sys.argv[2]))
         elif action == "import-navigator": respond(import_navigator())
         elif action == "run": respond(run_job(sys.argv[2]))
         else: raise ValueError("Invalid action.")
