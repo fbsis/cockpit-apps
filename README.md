@@ -29,10 +29,17 @@ connections, and structural changes to volumes or networks require recreation.
 
 ### Backup
 
-Backup jobs run as system services. Their configuration is saved at
-`/etc/cockpit-apps/backups.json`, logs at `/var/cache/cockpit-apps/backups`, and
-systemd units use the `cockpit-apps-backup@` prefix. The module requires `rsync`
-and systemd; ZFS is required only when snapshots are enabled.
+Backup jobs currently run as the `root` user through systemd user services. Their
+configuration is saved at `/root/.config/cockpit-apps/backups.json`, logs at
+`/root/.cache/cockpit-apps/backups`, and units use the `cockpit-apps-backup@`
+prefix under `/root/.config/systemd/user`. The module requires `rsync`, systemd,
+and persistent root user services; ZFS is required only when snapshots are enabled.
+
+Enable persistent timers once on the server:
+
+```bash
+sudo loginctl enable-linger root
+```
 
 The backup helper is derived from the GPL-3.0-or-later Backup module in
 [fbsis/cockpit-navigator](https://github.com/fbsis/cockpit-navigator). See
