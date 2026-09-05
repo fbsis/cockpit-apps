@@ -40,10 +40,19 @@ function lastRun(job) {
   return `${result}: ${new Date(job.lastRun.at).toLocaleString()}`;
 }
 
+function renderSummary(jobs) {
+  const latest = jobs.filter(job => job.lastRun?.at).sort((left, right) => new Date(right.lastRun.at) - new Date(left.lastRun.at))[0];
+  document.querySelector("#total-count").textContent = jobs.length;
+  document.querySelector("#enabled-count").textContent = jobs.filter(job => job.enabled).length;
+  document.querySelector("#running-count").textContent = jobs.filter(job => job.status?.running).length;
+  document.querySelector("#last-result").textContent = latest ? `${latest.lastRun.status === "success" ? "Concluído" : "Falhou"}: ${new Date(latest.lastRun.at).toLocaleString()}` : "Nenhuma execução";
+}
+
 async function load() {
   document.querySelector("#refresh-button").disabled = true;
   try {
     const { jobs } = await run("list");
+    renderSummary(jobs);
     jobsTable.replaceChildren();
     document.querySelector("#empty-state").hidden = jobs.length > 0;
     for (const job of jobs) {
