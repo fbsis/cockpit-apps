@@ -22,10 +22,7 @@ def cache_dir():
     path = Path(os.environ.get("XDG_CACHE_HOME", "~/.cache")).expanduser() / "cockpit-apps" / "backups"
     path.mkdir(mode=0o700, parents=True, exist_ok=True)
     return path
-def unit_dir():
-    path = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser() / "systemd" / "user"
-    path.mkdir(mode=0o700, parents=True, exist_ok=True)
-    return path
+def unit_dir(): return Path("/etc/systemd/system")
 def load_config():
     path = config_path()
     if not path.exists(): return {"jobs": []}
@@ -65,16 +62,9 @@ def validate(job):
     if job["enabled"]: validate_calendar(calendar(job))
 def write_unit(path, content):
     temporary = path.with_suffix(path.suffix + ".tmp"); temporary.write_text(content, encoding="utf-8"); os.chmod(temporary, 0o600); os.replace(temporary, path)
-def user_environment():
-    runtime = f"/run/user/{os.geteuid()}"
-    return {**os.environ, "XDG_RUNTIME_DIR": runtime, "DBUS_SESSION_BUS_ADDRESS": f"unix:path={runtime}/bus"}
-def ensure_user_manager():
-    subprocess.run(["loginctl", "enable-linger", "root"], check=True, capture_output=True, text=True, timeout=15)
-    subprocess.run(["systemctl", "start", "user@0.service"], check=True, capture_output=True, text=True, timeout=15)
 def userctl(args, **kwargs):
-    kwargs.setdefault("env", user_environment())
     kwargs.setdefault("timeout", 20)
-    return subprocess.run(["systemctl", "--user", *args], **kwargs)
+    return subprocess.run(["systemctl", *args], **kwargs)
 def sync_systemd():
     config = load_config(); configured = set()
     for job in config["jobs"]:
@@ -179,7 +169,7 @@ def import_navigator():
 def respond(value): print(json.dumps({"ok": True, **value}))
 def main():
     try:
-        require_root(); ensure_user_manager(); action = sys.argv[1]
+        require_root(); action = sys.argv[1]
         if action == "list":
             result = jobs()
             for job in result: job["status"] = status(job["id"])
@@ -191,7 +181,7 @@ def main():
         elif action == "start": validate_id(sys.argv[2]); userctl(["start", "--no-block", unit_name(sys.argv[2], "service")], check=True, capture_output=True); respond({"started": True})
         elif action == "logs":
             job_id = sys.argv[2]; validate_id(job_id); lines = log_path(job_id).read_text(encoding="utf-8").splitlines()[-50:] if log_path(job_id).exists() else []
-            journal = subprocess.run(["journalctl", "--user", "--no-pager", "--output=short-iso", "--lines=50", "--unit", unit_name(job_id, "service")], text=True, capture_output=True, env=user_environment(), timeout=20).stdout.splitlines()[-50:]; respond({"lines": lines, "journal": journal})
+            journal = subprocess.run(["journalctl", "--no-pager", "--output=short-iso", "--lines=50", "--unit", unit_name(job_id, "service")], text=True, capture_output=True, timeout=20).stdout.splitlines()[-50:]; respond({"lines": lines, "journal": journal})
         elif action == "detect-zfs": respond(detect_zfs(sys.argv[2]))
         elif action == "directories": respond(list_directories(sys.argv[2]))
         elif action == "import-navigator": respond(import_navigator())
