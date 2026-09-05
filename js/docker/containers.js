@@ -61,10 +61,10 @@ async function openRemoveContainer(container) {
     const volumeUse = await Promise.all(volumes.map(async volume => [volume, await inUse("volume", volume, container.id)]));
     const removableVolumes = volumeUse.filter(([, used]) => !used).map(([volume]) => volume);
     const options = [];
-    if (!imageInUse) options.push({ id: "remove-container-image", value: "image", label: "Remover a imagem associada, que não é usada por outro container" });
-    for (const [index, volume] of removableVolumes.entries()) options.push({ id: `remove-container-volume-${index}`, value: `volume:${volume}`, label: `Remover o volume “${volume}”, que não é usado por outro container` });
-    if (imageInUse || removableVolumes.length !== volumes.length) options.push({ id: "unavailable-resources", value: "", label: "Alguns recursos compartilhados serão preservados", disabled: true });
-    confirmActionWithOptions("Remover container", `Remover “${container.name}”? Esta ação não pode ser desfeita.`, options, async selected => {
+    if (!imageInUse) options.push({ id: "remove-container-image", value: "image", label: "Remove the associated image, which no other container uses" });
+    for (const [index, volume] of removableVolumes.entries()) options.push({ id: `remove-container-volume-${index}`, value: `volume:${volume}`, label: `Remove volume “${volume}”, which no other container uses` });
+    if (imageInUse || removableVolumes.length !== volumes.length) options.push({ id: "unavailable-resources", value: "", label: "Shared resources will be kept", disabled: true });
+    confirmActionWithOptions("Remove container", `Remove “${container.name}”? This action cannot be undone.`, options, async selected => {
       await command(["docker", "container", "rm", "--force", container.id]);
       if (selected.includes("image")) await command(["docker", "image", "rm", details.Image]);
       for (const value of selected.filter(value => value.startsWith("volume:"))) await command(["docker", "volume", "rm", value.slice("volume:".length)]);
@@ -81,9 +81,9 @@ export async function openPortForm(container) {
     if (!bindings.length) throw new Error("This container has no published ports to change.");
     portChange = { container, details };
     portChange.bindings = bindings;
-    document.querySelector("#form-title").textContent = `Alterar portas — ${container.name}`;
+    document.querySelector("#form-title").textContent = `Change ports — ${container.name}`;
     const inputs = bindings.map((binding, index) => `<div class="row g-2 align-items-end mb-3"><div class="col-md-5"><label class="form-label">Porta do container</label><input class="form-control" value="${escapeHtml(binding.containerPort)}" readonly></div><div class="col-md-3"><label class="form-label">IP do host</label><input class="form-control" value="${escapeHtml(binding.hostIp || "Todas as interfaces")}" readonly></div><div class="col-md-4"><label class="form-label" for="field-host-port-${index}">Porta no host</label><input class="form-control" id="field-host-port-${index}" name="hostPort-${index}" value="${escapeHtml(binding.hostPort)}" required></div></div>`).join("");
-    document.querySelector("#form-fields").innerHTML = `<div class="alert alert-warning">O Docker recriará o container uma vez, aplicando todas as portas abaixo. O container antigo só será removido depois que o novo iniciar com sucesso.</div>${inputs}`;
+    document.querySelector("#form-fields").innerHTML = `<div class="alert alert-warning">Docker will recreate the container once and apply every port below. The original container is removed only after the replacement starts successfully.</div>${inputs}`;
     document.querySelector("#resource-form").dataset.handler = "container-port";
     modals.form.show();
   } catch (error) {

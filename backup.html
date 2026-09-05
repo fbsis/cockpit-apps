@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Backup</title>
+    <title>Backups</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="backup.css" rel="stylesheet">
@@ -11,22 +11,23 @@
   <body>
     <main class="container-lg py-4">
       <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div><h1 class="h3 mb-1">Backup</h1><p class="text-body-secondary mb-0">Cópias agendadas com rsync e snapshots ZFS opcionais</p></div>
-        <div class="d-flex flex-wrap gap-2"><button id="import-navigator-button" type="button" class="btn btn-outline-secondary">Importar Navigator</button><button id="refresh-button" type="button" class="btn btn-outline-secondary">Atualizar</button><button id="new-button" type="button" class="btn btn-primary">Novo backup</button></div>
+        <div><h1 class="h3 mb-1">Backups</h1><p class="text-body-secondary mb-0">Scheduled rsync copies and optional ZFS snapshots</p></div>
+        <div class="d-flex flex-wrap gap-2"><button id="import-navigator-button" type="button" class="btn btn-outline-secondary">Import Navigator</button><button id="refresh-button" type="button" class="btn btn-outline-secondary">Refresh</button><button id="new-button" type="button" class="btn btn-primary">New backup</button></div>
       </header>
       <div id="alert-area" aria-live="polite"></div>
-      <section class="row g-3 mb-4" aria-label="Resumo dos backups">
-        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Agendamentos</div><div id="total-count" class="fs-3 fw-semibold">-</div></div></div></div>
-        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Ativos</div><div id="enabled-count" class="fs-3 fw-semibold text-success">-</div></div></div></div>
-        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Em execução</div><div id="running-count" class="fs-3 fw-semibold text-primary">-</div></div></div></div>
-        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Último resultado</div><div id="last-result" class="small fw-semibold mt-2 text-truncate">-</div></div></div></div>
+      <section class="row g-3 mb-4" aria-label="Backup summary">
+        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Schedules</div><div id="total-count" class="fs-3 fw-semibold">-</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Enabled</div><div id="enabled-count" class="fs-3 fw-semibold text-success">-</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Running</div><div id="running-count" class="fs-3 fw-semibold text-primary">-</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card summary-card h-100"><div class="card-body"><div class="text-body-secondary small">Latest result</div><div id="last-result" class="small fw-semibold mt-2 text-truncate">-</div></div></div></div>
       </section>
-      <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Nome</th><th>Origem</th><th>Destino</th><th>Agendamento</th><th>Status</th><th>Última execução</th><th class="text-end">Ações</th></tr></thead><tbody id="jobs-table"></tbody></table></div></div>
-      <p id="empty-state" class="text-center text-body-secondary py-5 mb-0">Nenhum backup agendado.</p>
+      <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Name</th><th>Source</th><th>Destination</th><th>Schedule</th><th>Status</th><th>Last run</th><th class="text-end">Actions</th></tr></thead><tbody id="jobs-table"></tbody></table></div></div>
+      <p id="empty-state" class="text-center text-body-secondary py-5 mb-0">No backup schedules yet.</p>
+      <details class="mt-4"><summary>Diagnostics</summary><pre id="diagnostic-output" class="log-output mt-2"></pre></details>
     </main>
-    <div class="modal fade" id="job-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><form id="job-form"><div class="modal-header"><h2 id="form-title" class="modal-title fs-5">Backup</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div id="form-fields" class="modal-body"></div><div class="modal-footer"></div></form></div></div></div>
-    <div class="modal fade" id="directory-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5">Selecionar diretório</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><div id="directory-path" class="font-monospace small text-body-secondary mb-3"></div><div id="directory-list" class="list-group"></div></div><div class="modal-footer"><button id="directory-up-button" type="button" class="btn btn-outline-secondary">Pasta anterior</button><button id="directory-select-button" type="button" class="btn btn-primary">Selecionar esta pasta</button></div></div></div></div>
-    <div class="modal fade" id="logs-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h2 id="logs-title" class="modal-title fs-5">Logs</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><h3 class="h6">Backup</h3><pre id="backup-log" class="log-output"></pre><h3 class="h6 mt-3">Serviço systemd</h3><pre id="journal-log" class="log-output"></pre></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div></div></div></div>
+    <div class="modal fade" id="job-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><form id="job-form"><div class="modal-header"><h2 id="form-title" class="modal-title fs-5">Backup</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div id="form-fields" class="modal-body"></div><div class="modal-footer"></div></form></div></div></div>
+    <div class="modal fade" id="directory-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5">Select directory</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><div id="directory-path" class="font-monospace small text-body-secondary mb-3"></div><div id="directory-list" class="list-group"></div></div><div class="modal-footer"><button id="directory-up-button" type="button" class="btn btn-outline-secondary">Parent directory</button><button id="directory-select-button" type="button" class="btn btn-primary">Select this directory</button></div></div></div></div>
+    <div class="modal fade" id="logs-modal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h2 id="logs-title" class="modal-title fs-5">Logs</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><h3 class="h6">Backup</h3><pre id="backup-log" class="log-output"></pre><h3 class="h6 mt-3">Systemd service</h3><pre id="journal-log" class="log-output"></pre></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
     <script src="../base1/cockpit.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="backup.js"></script>
