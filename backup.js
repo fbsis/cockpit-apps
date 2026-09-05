@@ -71,7 +71,25 @@ async function openWizard(job = null, initialStep = 0) {
     if (step === 3) await renderReview(body, draft);
     const cancel = document.createElement("button"); cancel.type = "button"; cancel.className = "btn btn-secondary"; cancel.textContent = "Cancelar"; cancel.onclick = () => jobModal.hide(); footer.append(cancel);
     if (step) { const back = document.createElement("button"); back.type = "button"; back.className = "btn btn-outline-secondary"; back.textContent = "Voltar"; back.onclick = async () => { if (readStep(body, draft, step)) { step--; await render(); } }; footer.append(back); }
-    const next = document.createElement("button"); next.type = "button"; next.className = "btn btn-primary"; next.textContent = step === 3 ? "Salvar agendamento" : "Avançar"; next.onclick = async () => { if (!readStep(body, draft, step)) return; if (step < 3) { step++; await render(); } else { next.disabled = true; try { await run("save", [], JSON.stringify(draft)); jobModal.hide(); alert("Backup salvo e timer atualizado.", "success"); await load(); } catch (error) { alert(error.message); next.disabled = false; } } }; footer.append(next);
+    const next = document.createElement("button"); next.type = "button"; next.className = "btn btn-primary"; next.textContent = step === 3 ? "Salvar agendamento" : "Avançar";
+    next.addEventListener("click", async () => {
+      if (!readStep(body, draft, step)) return;
+      if (step < 3) { step++; await render(); return; }
+      next.disabled = true;
+      next.textContent = "Salvando...";
+      try {
+        await run("save", [], JSON.stringify(draft));
+        clearInterval(detailTimer);
+        jobModal.hide();
+        alert("Backup salvo e timer atualizado.", "success");
+        await load();
+      } catch (error) {
+        alert(error.message || "O agendamento não pôde ser salvo.");
+        next.disabled = false;
+        next.textContent = "Salvar agendamento";
+      }
+    });
+    footer.append(next);
   }
   form.onsubmit = event => { event.preventDefault(); };
   await render(); jobModal.show();
